@@ -26,6 +26,7 @@ def encrypt(passwd: str, file_name: str):
         data = f.read()
         cipher_text, tag = cipher.encrypt_and_digest(data)
         f.seek(0)
+        f.truncate()
         f.write(nonce)
         f.write(tag)
         f.write(cipher_text)
@@ -43,6 +44,7 @@ def decrypt(passwd: str, file_name: str):
         try:
             cipher.verify(tag)
             f.seek(0)
+            f.truncate()
             f.write(data)
             print("Decryption done")
         except ValueError:
@@ -52,7 +54,7 @@ def decrypt(passwd: str, file_name: str):
 # -------------------------------- Main
 if __name__ == "__main__":
     passwd = 'my_password'
-    file_name = "file_to_encrypt.exe"
+    file_name = "file.txt"
     encrypt(passwd, file_name)
-    sleep(2)
+    sleep(3)
     decrypt(passwd, file_name)
