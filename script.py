@@ -2,13 +2,12 @@ import time
 from Cryptodome.Cipher import AES
 
 
-def create_16b_object(bytes_obj) -> bytes:
-    obj_len = len(bytes_obj)
-    remaining_space = 16 - obj_len % 16
-    if obj_len % 16 == 0:
-        return bytes([*bytes_obj])
-    else:
-        return bytes([*bytes(remaining_space), *bytes_obj])
+def get_16b_text(text: bytes) -> bytes:
+    text_module = len(text) % 16
+    if text_module != 0:
+        remaining_spaces = 16 - text_module
+        return bytes([*bytes(remaining_spaces), *text])
+    return text
 
 
 def sleep(seconds):
@@ -19,9 +18,8 @@ def sleep(seconds):
 
 
 def encrypt(passwd_bytes: bytes, file_name: str):
-    KEY = create_16b_object(passwd_bytes)
-    print('KEY: ', KEY)
-    cipher = AES.new(KEY, AES.MODE_EAX)
+    key = get_16b_text(passwd_bytes)
+    cipher = AES.new(key, AES.MODE_EAX)
     nonce = cipher.nonce
     with open(file_name, "r+b") as f:
         data = f.read()
@@ -35,11 +33,11 @@ def encrypt(passwd_bytes: bytes, file_name: str):
 
 def decrypt(passwd_bytes: bytes, file_name: str):
     with open(file_name, "r+b") as f:
-        KEY = create_16b_object(passwd_bytes)
+        key = get_16b_text(passwd_bytes)
         nonce = f.read(16)
         tag = f.read(16)
         cipher_text = f.read()
-        cipher = AES.new(KEY, AES.MODE_EAX, nonce=nonce)
+        cipher = AES.new(key, AES.MODE_EAX, nonce=nonce)
         data = cipher.decrypt(cipher_text)
         try:
             cipher.verify(tag)
@@ -52,8 +50,8 @@ def decrypt(passwd_bytes: bytes, file_name: str):
 
 # -------------------------------- Main
 if __name__ == "__main__":
-    passwd = b'doqso'
-    file_name = "cipher_test.exe"
+    passwd = b'my_password'
+    file_name = "file_to_encrypt.exe"
     encrypt(passwd, file_name)
     sleep(2)
     decrypt(passwd, file_name)
